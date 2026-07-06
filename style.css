@@ -1,12 +1,12 @@
 :root {
   --paper: #F3EFE6;
   --paper-raised: #FFFDF8;
-  --ink: #1E2E3D;
-  --ink-soft: #4B5B6B;
-  --stamp: #B23A2E;
-  --stamp-dark: #8E2C22;
-  --highlight: #E7B84E;
-  --line: #D8D1BE;
+  --ink: #273338;
+  --ink-soft: #2B5748;
+  --stamp: #75B06F;
+  --stamp-dark: #618764;
+  --highlight: #9CB080;
+  --line: #FBF6E2;
   --radius: 4px;
   --mono: 'Space Mono', monospace;
   --sans: 'Work Sans', sans-serif;
