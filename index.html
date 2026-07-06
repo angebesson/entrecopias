@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Copia Litoral — Centro de Impresiones</title>
+<meta name="description" content="Impresiones, fotocopias y anillados en Colón, Entre Ríos. Pedí online, pagá y retirá en el local.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a href="#top" class="brand">
+      <span class="brand-mark">CL</span>
+      <span class="brand-name">Copia<br>Litoral</span>
+    </a>
+    <nav class="main-nav">
+      <a href="#pedido">Hacer un pedido</a>
+      <a href="#precios">Precios</a>
+      <a href="#como-funciona">Cómo funciona</a>
+      <a href="#contacto">Contacto</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap hero-inner">
+      <div class="hero-copy">
+        <p class="eyebrow">Centro de impresiones · Colón, Entre Ríos</p>
+        <h1>Tu archivo entra por la pantalla,<br>sale impreso en tus manos.</h1>
+        <p class="hero-sub">Subí el archivo, elegí el formato, pagá online y retirá cuando quieras. Sin colas, sin vueltas.</p>
+        <a href="#pedido" class="btn btn-primary">Empezar mi pedido</a>
+      </div>
+      <div class="hero-ticket" aria-hidden="true">
+        <div class="ticket-mini">
+          <div class="ticket-mini-row"><span>Copias A4 B/N</span><span>x24</span></div>
+          <div class="ticket-mini-row"><span>Anillado</span><span>x1</span></div>
+          <div class="ticket-mini-row"><span>Papel fotográfico</span><span>x6</span></div>
+          <div class="ticket-mini-total"><span>TOTAL</span><span id="heroTickerTotal">$0</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMO FUNCIONA -->
+  <section id="como-funciona" class="steps">
+    <div class="wrap">
+      <h2 class="section-title">Cómo funciona</h2>
+      <ol class="steps-list">
+        <li>
+          <span class="step-num">01</span>
+          <h3>Elegís qué imprimir</h3>
+          <p>Impresiones, fotocopias o fotos. Vos definís tamaño, papel y terminación.</p>
+        </li>
+        <li>
+          <span class="step-num">02</span>
+          <h3>Subís tu archivo</h3>
+          <p>Formatos .pdf, .doc, .docx, .jpg, .png. Lo revisamos antes de imprimir.</p>
+        </li>
+        <li>
+          <span class="step-num">03</span>
+          <h3>Pagás online</h3>
+          <p>Con Mercado Pago, seguro y al instante.</p>
+        </li>
+        <li>
+          <span class="step-num">04</span>
+          <h3>Retirás en el local</h3>
+          <p>Te avisamos por mail apenas esté listo. Normalmente en 24 a 48 hs.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- PEDIDO -->
+  <section id="pedido" class="order-section">
+    <div class="wrap order-layout">
+
+      <form class="order-form" id="orderForm" novalidate>
+        <h2 class="section-title">Armá tu pedido</h2>
+
+        <fieldset class="form-block">
+          <legend>Tus datos</legend>
+          <div class="field-row">
+            <div class="field">
+              <label for="nombre">Nombre</label>
+              <input type="text" id="nombre" name="nombre" required>
+            </div>
+            <div class="field">
+              <label for="apellido">Apellido</label>
+              <input type="text" id="apellido" name="apellido" required>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="celular">Celular</label>
+              <input type="tel" id="celular" name="celular" placeholder="345 400 0000" required>
+            </div>
+            <div class="field">
+              <label for="email">Email</label>
+              <input type="email" id="email" name="email" placeholder="nombre@correo.com" required>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="form-block">
+          <legend>Forma de impresión</legend>
+
+          <div class="tabs" role="tablist">
+            <button type="button" class="tab active" data-tab="impresiones" role="tab" aria-selected="true">Impresiones</button>
+            <button type="button" class="tab" data-tab="fotografia" role="tab" aria-selected="false">Fotografía</button>
+          </div>
+
+          <div class="tab-panel" data-panel="impresiones">
+            <div class="field-row">
+              <div class="field">
+                <label for="tamano">Tamaño de hoja</label>
+                <select id="tamano" name="tamano">
+                  <option value="a4" data-price="30">A4</option>
+                  <option value="a3" data-price="55">A3</option>
+                  <option value="oficio" data-price="35">Oficio</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="calidad">Calidad</label>
+                <select id="calidad" name="calidad">
+                  <option value="byn" data-price="0">Blanco y negro</option>
+                  <option value="color" data-price="40">Color</option>
+                </select>
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="faz">Faz</label>
+                <select id="faz" name="faz">
+                  <option value="simple" data-price="0">Simple faz</option>
+                  <option value="doble" data-price="10">Doble faz</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="papel">Tipo de papel</label>
+                <select id="papel" name="papel">
+                  <option value="comun" data-price="0">Común 80g</option>
+                  <option value="obra" data-price="15">Obra 120g</option>
+                  <option value="fotografico" data-price="90">Fotográfico</option>
+                </select>
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="terminado">Terminación</label>
+                <select id="terminado" name="terminado">
+                  <option value="ninguna" data-price="0">Ninguna</option>
+                  <option value="anillado" data-price="800">Anillado</option>
+                  <option value="plastificado" data-price="600">Plastificado</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="copias">Copias</label>
+                <input type="number" id="copias" name="copias" min="1" value="1">
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-panel" data-panel="fotografia" hidden>
+            <div class="field-row">
+              <div class="field">
+                <label for="tamanoFoto">Tamaño</label>
+                <select id="tamanoFoto" name="tamanoFoto">
+                  <option value="10x15" data-price="150">10x15 cm</option>
+                  <option value="13x18" data-price="220">13x18 cm</option>
+                  <option value="20x30" data-price="480">20x30 cm</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="acabadoFoto">Acabado</label>
+                <select id="acabadoFoto" name="acabadoFoto">
+                  <option value="brillante" data-price="0">Brillante</option>
+                  <option value="mate" data-price="20">Mate</option>
+                </select>
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="copiasFoto">Cantidad</label>
+                <input type="number" id="copiasFoto" name="copiasFoto" min="1" value="1">
+              </div>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="form-block">
+          <legend>Tu archivo</legend>
+          <label class="file-drop" id="fileDrop" for="archivo">
+            <span class="file-drop-icon">↑</span>
+            <span class="file-drop-text">Subí tu archivo</span>
+            <span class="file-drop-hint">.pdf .doc .docx .jpg .png — máx. 20MB</span>
+            <input type="file" id="archivo" name="archivo" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" hidden>
+          </label>
+          <p class="file-name" id="fileName" aria-live="polite"></p>
+        </fieldset>
+
+        <button type="submit" class="btn btn-primary btn-add">Añadir al pedido</button>
+      </form>
+
+      <!-- TICKET / CARRITO -->
+      <aside class="ticket" id="ticket" aria-label="Resumen del pedido">
+        <div class="ticket-hole"></div>
+        <h2 class="ticket-title">Copia Litoral</h2>
+        <p class="ticket-sub">Ticket de pedido</p>
+        <div class="ticket-divider"></div>
+
+        <div class="ticket-items" id="ticketItems">
+          <p class="ticket-empty">Todavía no agregaste nada. Completá el formulario y sumalo acá.</p>
+        </div>
+
+        <div class="ticket-divider"></div>
+        <div class="ticket-total-row">
+          <span>TOTAL</span>
+          <span id="ticketTotal">$0</span>
+        </div>
+
+        <button type="button" class="btn btn-pay" id="payBtn" disabled>Pagar con Mercado Pago</button>
+        <p class="ticket-note">Pago 100% seguro. Retirás en 24–48hs con aviso por mail.</p>
+      </aside>
+
+    </div>
+  </section>
+
+  <!-- PRECIOS -->
+  <section id="precios" class="pricing">
+    <div class="wrap">
+      <h2 class="section-title">Lista de precios de referencia</h2>
+      <div class="pricing-grid">
+        <div class="price-card">
+          <h3>Impresión A4 B/N</h3>
+          <p class="price">$30<span>/hoja</span></p>
+        </div>
+        <div class="price-card">
+          <h3>Impresión A4 Color</h3>
+          <p class="price">$70<span>/hoja</span></p>
+        </div>
+        <div class="price-card">
+          <h3>Anillado</h3>
+          <p class="price">$800<span>/unidad</span></p>
+        </div>
+        <div class="price-card">
+          <h3>Foto 10x15</h3>
+          <p class="price">$150<span>/unidad</span></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer id="contacto" class="site-footer">
+  <div class="wrap footer-inner">
+    <div>
+      <p class="footer-brand">Copia Litoral</p>
+      <p>Centro de impresiones · Colón, Entre Ríos</p>
+    </div>
+    <div>
+      <p><strong>Horario:</strong> Lunes a Viernes de 9 a 19 hs</p>
+      <p><strong>WhatsApp:</strong> +54 9 3447 000-000</p>
+      <p><strong>Email:</strong> hola@copialitoral.com.ar</p>
+    </div>
+  </div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
