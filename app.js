@@ -13,16 +13,34 @@ const money = (n) => `$${n.toLocaleString('es-AR')}`;
 const tabs = document.querySelectorAll('.tab');
 const panels = document.querySelectorAll('.tab-panel');
 
-tabs.forEach((tab) => {
-  tab.addEventListener('click', () => {
-    tabs.forEach((t) => { t.classList.remove('active'); t.setAttribute('aria-selected', 'false'); });
-    tab.classList.add('active');
-    tab.setAttribute('aria-selected', 'true');
+function activateTab(tab) {
+  tabs.forEach((t) => {
+    t.classList.remove('active');
+    t.setAttribute('aria-selected', 'false');
+    t.tabIndex = -1;
+  });
+  tab.classList.add('active');
+  tab.setAttribute('aria-selected', 'true');
+  tab.tabIndex = 0;
+  tab.focus();
 
-    const target = tab.dataset.tab;
-    panels.forEach((p) => {
-      p.hidden = p.dataset.panel !== target;
-    });
+  const target = tab.dataset.tab;
+  panels.forEach((p) => {
+    p.hidden = p.dataset.panel !== target;
+  });
+}
+
+tabs.forEach((tab, index) => {
+  tab.addEventListener('click', () => activateTab(tab));
+
+  // Standard ARIA tabs keyboard pattern: Left/Right arrows move focus + selection
+  tab.addEventListener('keydown', (e) => {
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    e.preventDefault();
+    const nextIndex = e.key === 'ArrowRight'
+      ? (index + 1) % tabs.length
+      : (index - 1 + tabs.length) % tabs.length;
+    activateTab(tabs[nextIndex]);
   });
 });
 
@@ -95,7 +113,7 @@ function renderTicket() {
       <div class="ticket-item">
         <span>${item.label}</span>
         <span>${money(item.subtotal)}
-          <button type="button" class="ticket-item-remove" data-id="${item.id}">quitar</button>
+          <button type="button" class="ticket-item-remove" data-id="${item.id}" aria-label="Quitar ${item.label} del ticket">quitar</button>
         </span>
       </div>
     `).join('');

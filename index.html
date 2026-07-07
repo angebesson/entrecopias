@@ -11,6 +11,8 @@
 </head>
 <body>
 
+<a href="#top" class="skip-link">Saltar al contenido principal</a>
+
 <header class="site-header">
   <div class="wrap header-inner">
     <a href="#top" class="brand">
@@ -26,7 +28,7 @@
   </div>
 </header>
 
-<main id="top">
+<main id="top" tabindex="-1">
 
   <!-- HERO -->
   <section class="hero">
@@ -111,12 +113,12 @@
         <fieldset class="form-block">
           <legend>Forma de impresión</legend>
 
-          <div class="tabs" role="tablist">
-            <button type="button" class="tab active" data-tab="impresiones" role="tab" aria-selected="true">Impresiones</button>
-            <button type="button" class="tab" data-tab="fotografia" role="tab" aria-selected="false">Fotografía</button>
+          <div class="tabs" role="tablist" aria-label="Tipo de trabajo de impresión">
+            <button type="button" id="tab-impresiones" class="tab active" data-tab="impresiones" role="tab" aria-selected="true" aria-controls="panel-impresiones">Impresiones</button>
+            <button type="button" id="tab-fotografia" class="tab" data-tab="fotografia" role="tab" aria-selected="false" aria-controls="panel-fotografia" tabindex="-1">Fotografía</button>
           </div>
 
-          <div class="tab-panel" data-panel="impresiones">
+          <div class="tab-panel" id="panel-impresiones" role="tabpanel" aria-labelledby="tab-impresiones" tabindex="0" data-panel="impresiones">
             <div class="field-row">
               <div class="field">
                 <label for="tamano">Tamaño de hoja</label>
@@ -167,7 +169,7 @@
             </div>
           </div>
 
-          <div class="tab-panel" data-panel="fotografia" hidden>
+          <div class="tab-panel" id="panel-fotografia" role="tabpanel" aria-labelledby="tab-fotografia" tabindex="0" data-panel="fotografia" hidden>
             <div class="field-row">
               <div class="field">
                 <label for="tamanoFoto">Tamaño</label>
@@ -197,10 +199,10 @@
         <fieldset class="form-block">
           <legend>Tu archivo</legend>
           <label class="file-drop" id="fileDrop" for="archivo">
-            <span class="file-drop-icon">↑</span>
+            <span class="file-drop-icon" aria-hidden="true">↑</span>
             <span class="file-drop-text">Subí tu archivo</span>
             <span class="file-drop-hint">.pdf .doc .docx .jpg .png — máx. 20MB</span>
-            <input type="file" id="archivo" name="archivo" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" hidden>
+            <input type="file" id="archivo" name="archivo" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" class="file-drop-input">
           </label>
           <p class="file-name" id="fileName" aria-live="polite"></p>
         </fieldset>
