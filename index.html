@@ -8,24 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
-  import { getFirestore } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyCpWCcpLy69hsm4R8TFey6WfcStkXAcuD8",
-    authDomain: "copia-litoral.firebaseapp.com",
-    projectId: "copia-litoral",
-    storageBucket: "copia-litoral.firebasestorage.app",
-    messagingSenderId: "315098172786",
-    appId: "1:315098172786:web:b78c36569a4ba6475fa1eb"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-  console.log("Firebase conectado:", db);
-</script>
 </head>
 <body>
 
@@ -295,6 +278,6 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="app.js"></script>
+<script type="module" src="app.js"></script>
 </body>
 </html>

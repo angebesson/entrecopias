@@ -1,6 +1,20 @@
 // ===================================================================
 // Copia Litoral — order calculator, ticket/cart, and checkout hook
 // ===================================================================
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCpWCcpLy69hsm4R8TFey6WfcStkXAcuD8",
+  authDomain: "copia-litoral.firebaseapp.com",
+  projectId: "copia-litoral",
+  storageBucket: "copia-litoral.firebasestorage.app",
+  messagingSenderId: "315098172786",
+  appId: "1:315098172786:web:b78c36569a4ba6475fa1eb"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
 const state = {
   cart: [],      // { id, label, qty, unitPrice, subtotal }
@@ -188,12 +202,35 @@ payBtn.addEventListener('click', () => {
   simulateMercadoPagoCheckout();
 });
 
-function simulateMercadoPagoCheckout() {
+async function simulateMercadoPagoCheckout() {
   const total = state.cart.reduce((sum, item) => sum + item.subtotal, 0);
   payBtn.disabled = true;
+  payBtn.textContent = 'Guardando pedido…';
+
+  const pedido = {
+    nombre: document.getElementById('nombre').value,
+    apellido: document.getElementById('apellido').value,
+    celular: document.getElementById('celular').value,
+    email: document.getElementById('email').value,
+    items: state.cart,
+    total: total,
+    estado: 'pendiente_pago',
+    creadoEn: serverTimestamp(),
+  };
+
+  try {
+    const docRef = await addDoc(collection(db, "pedidos"), pedido);
+    console.log("Pedido guardado con ID:", docRef.id);
+  } catch (error) {
+    console.error("Error al guardar el pedido:", error);
+    showToast('No se pudo guardar el pedido. Probá de nuevo.');
+    payBtn.textContent = 'Pagar con Mercado Pago';
+    payBtn.disabled = false;
+    return;
+  }
+
   payBtn.textContent = 'Redirigiendo a Mercado Pago…';
 
-  // Simulated network delay, standing in for the real preference-creation call
   setTimeout(() => {
     const confirmed = window.confirm(
       `[SANDBOX] Simulación de Mercado Pago\n\n` +
@@ -205,7 +242,7 @@ function simulateMercadoPagoCheckout() {
     if (confirmed) {
       state.cart = [];
       renderTicket();
-      showToast('Pago simulado aprobado ✓ (sandbox)');
+      showToast('Pago simulado aprobado ✓ (sandbox) — pedido guardado');
     } else {
       showToast('Pago simulado cancelado');
     }
