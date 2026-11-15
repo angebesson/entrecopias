@@ -1,23 +1,11 @@
 // ===================================================================
 // Copia Litoral — order calculator, ticket/cart, and checkout hook
 // ===================================================================
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
-import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyCpWCcpLy69hsm4R8TFey6WfcStkXAcuD8",
-  authDomain: "copia-litoral.firebaseapp.com",
-  projectId: "copia-litoral",
-  storageBucket: "copia-litoral.firebasestorage.app",
-  messagingSenderId: "315098172786",
-  appId: "1:315098172786:web:b78c36569a4ba6475fa1eb"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+// The page only SHOWS prices. The real total is recalculated on the server
+// (api/_lib/precios.js) from the options sent in each cart item.
 
 const state = {
-  cart: [],      // { id, label, qty, unitPrice, subtotal }
+  cart: [],      // { id, label, subtotal (display only), config (options sent to the server) }
   file: null,    // File object (name only is used; no real upload happens)
 };
 
@@ -91,13 +79,28 @@ function calculateCurrentConfig() {
 
     const label = buildImpresionesLabel(copias);
     const unitSubtotal = base * copias + terminado;
-    return { label, qty: copias, unitPrice: base, flat: terminado, subtotal: unitSubtotal };
+    const config = {
+      tipo: 'impresiones',
+      tamano: document.getElementById('tamano').value,
+      calidad: document.getElementById('calidad').value,
+      faz: document.getElementById('faz').value,
+      papel: document.getElementById('papel').value,
+      terminado: document.getElementById('terminado').value,
+      copias,
+    };
+    return { label, config, subtotal: unitSubtotal };
   } else {
     const base = selectedOptionPrice('tamanoFoto') + selectedOptionPrice('acabadoFoto');
     const copias = Math.max(1, Number(document.getElementById('copiasFoto').value || 1));
     const label = buildFotoLabel(copias);
     const unitSubtotal = base * copias;
-    return { label, qty: copias, unitPrice: base, flat: 0, subtotal: unitSubtotal };
+    const config = {
+      tipo: 'fotografia',
+      tamanoFoto: document.getElementById('tamanoFoto').value,
+      acabadoFoto: document.getElementById('acabadoFoto').value,
+      copias,
+    };
+    return { label, config, subtotal: unitSubtotal };
   }
 }
 
@@ -163,6 +166,8 @@ form.addEventListener('submit', (e) => {
     id: crypto.randomUUID(),
     label: config.label + (state.file ? ` · ${state.file.name}` : ''),
     subtotal: config.subtotal,
+    // Only the file NAME travels for now: real file upload is the next stage.
+    config: { ...config.config, archivo: state.file ? state.file.name : '' },
   });
 
   renderTicket();
@@ -173,84 +178,81 @@ form.addEventListener('submit', (e) => {
 const toastEl = document.getElementById('toast');
 let toastTimer = null;
 
-function showToast(message) {
+function showToast(message, ms = 2200) {
   toastEl.textContent = message;
   toastEl.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2200);
+  toastTimer = setTimeout(() => toastEl.classList.remove('show'), ms);
 }
 
 // ===================================================================
-// Mercado Pago — SANDBOX SIMULATION
-//
-// A real integration needs a backend: the access token that creates a
-// "preference" (the object Mercado Pago uses to know what's being
-// charged) is secret and can never live in front-end code. This demo
-// simulates that round trip so the flow can be shown end-to-end.
-//
-// To make this real:
-//   1. Stand up a small backend (Node/Express or a Firebase Function).
-//   2. It calls POST https://api.mercadopago.com/checkout/preferences
-//      with your ACCESS TOKEN (server-side only) and the cart items.
-//   3. It returns the preference "init_point" URL.
-//   4. The button below redirects the browser to that URL instead of
-//      running the simulateMercadoPagoCheckout() function.
+// Mercado Pago (Checkout Pro)
+// The page sends customer data + cart OPTIONS to /api/crear-pedido. The
+// server recalculates the total, saves the order and creates the payment
+// preference with the secret token. We only receive the checkout URL.
+// Payment confirmation arrives at /api/webhook (server to server).
 // ===================================================================
 
 payBtn.addEventListener('click', () => {
   if (state.cart.length === 0) return;
-  simulateMercadoPagoCheckout();
+  startMercadoPagoCheckout();
 });
 
-async function simulateMercadoPagoCheckout() {
-  const total = state.cart.reduce((sum, item) => sum + item.subtotal, 0);
-  payBtn.disabled = true;
-  payBtn.textContent = 'Guardando pedido…';
+function resetPayBtn() {
+  payBtn.textContent = 'Pagar con Mercado Pago';
+  payBtn.disabled = state.cart.length === 0;
+}
 
-  const pedido = {
-    nombre: document.getElementById('nombre').value,
-    apellido: document.getElementById('apellido').value,
-    celular: document.getElementById('celular').value,
-    email: document.getElementById('email').value,
-    items: state.cart,
-    total: total,
-    estado: 'pendiente_pago',
-    creadoEn: serverTimestamp(),
-  };
-
-  try {
-    const docRef = await addDoc(collection(db, "pedidos"), pedido);
-    console.log("Pedido guardado con ID:", docRef.id);
-  } catch (error) {
-    console.error("Error al guardar el pedido:", error);
-    showToast('No se pudo guardar el pedido. Probá de nuevo.');
-    payBtn.textContent = 'Pagar con Mercado Pago';
-    payBtn.disabled = false;
+async function startMercadoPagoCheckout() {
+  const fields = ['nombre', 'apellido', 'celular', 'email'];
+  const cliente = Object.fromEntries(fields.map((f) => [f, document.getElementById(f).value.trim()]));
+  const missing = fields.find((f) => !cliente[f]);
+  if (missing) {
+    document.getElementById(missing).focus();
+    showToast('Completá tus datos antes de pagar');
     return;
   }
 
-  payBtn.textContent = 'Redirigiendo a Mercado Pago…';
+  payBtn.disabled = true;
+  payBtn.textContent = 'Preparando el pago…';
 
-  setTimeout(() => {
-    const confirmed = window.confirm(
-      `[SANDBOX] Simulación de Mercado Pago\n\n` +
-      `Total a pagar: ${money(total)}\n\n` +
-      `En producción, acá se abriría el Checkout real de Mercado Pago.\n` +
-      `¿Simular pago aprobado?`
-    );
-
-    if (confirmed) {
-      state.cart = [];
-      renderTicket();
-      showToast('Pago simulado aprobado ✓ (sandbox) — pedido guardado');
-    } else {
-      showToast('Pago simulado cancelado');
+  try {
+    const res = await fetch('/api/crear-pedido', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cliente, items: state.cart.map((item) => item.config) }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.url) {
+      showToast(data.error || 'No se pudo iniciar el pago. Probá de nuevo.');
+      resetPayBtn();
+      return;
     }
+    payBtn.textContent = 'Redirigiendo a Mercado Pago…';
+    window.location.assign(data.url);
+  } catch (error) {
+    console.error('Error al iniciar el pago:', error);
+    showToast('No hay conexión con el servidor. Probá de nuevo.');
+    resetPayBtn();
+  }
+}
 
-    payBtn.textContent = 'Pagar con Mercado Pago';
-    payBtn.disabled = state.cart.length === 0;
-  }, 900);
+// ---------- Return from Mercado Pago (?pago=ok|pendiente|error) ----------
+// This only informs the customer. The order is marked as paid by the webhook,
+// never by this URL (anyone could type ?pago=ok).
+function showPaymentResult() {
+  const params = new URLSearchParams(window.location.search);
+  const result = params.get('pago');
+  if (!result) return;
+  const messages = {
+    ok: 'Recibimos tu pago. Te avisamos por mail cuando esté listo.',
+    pendiente: 'Tu pago está pendiente. Te avisamos cuando se acredite.',
+    error: 'El pago no se completó. Podés intentarlo de nuevo.',
+  };
+  if (messages[result]) showToast(messages[result], 7000);
+  history.replaceState(null, '', window.location.pathname);
 }
 
 // ---------- Init ----------
 renderTicket();
+showPaymentResult();
