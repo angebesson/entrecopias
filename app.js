@@ -153,7 +153,30 @@ function renderTicket() {
 // ---------- Add to cart ----------
 const form = document.getElementById('orderForm');
 
-form.addEventListener('submit', (e) => {
+const ALLOWED_EXT = ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'];
+const MAX_BYTES = 20 * 1024 * 1024;
+const addBtn = form.querySelector('.btn-add');
+
+// Direct upload to Supabase Storage with a signed URL created by the server
+// (same call the official supabase-js client makes in uploadToSignedUrl).
+async function uploadFile(file) {
+  const res = await fetch('/api/subir-archivo', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ nombre: file.name, tipo: file.type, tamano: file.size }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.url) throw new Error(data.error || 'No se pudo preparar la subida. Probá de nuevo.');
+
+  const body = new FormData();
+  body.append('cacheControl', '3600');
+  body.append('', file);
+  const up = await fetch(data.url, { method: 'PUT', body });
+  if (!up.ok) throw new Error('No se pudo subir el archivo. Probá de nuevo.');
+  return data.path;
+}
+
+form.addEventListener('submit', async (e) => {
   e.preventDefault();
 
   if (!form.checkValidity()) {
@@ -161,17 +184,45 @@ form.addEventListener('submit', (e) => {
     return;
   }
 
-  const config = calculateCurrentConfig();
-  state.cart.push({
-    id: crypto.randomUUID(),
-    label: config.label + (state.file ? ` · ${state.file.name}` : ''),
-    subtotal: config.subtotal,
-    // Only the file NAME travels for now: real file upload is the next stage.
-    config: { ...config.config, archivo: state.file ? state.file.name : '' },
-  });
+  const file = state.file;
+  if (!file) {
+    showToast('Subí tu archivo antes de añadir al pedido');
+    return;
+  }
+  const ext = file.name.includes('.') ? file.name.split('.').pop().toLowerCase() : '';
+  if (!ALLOWED_EXT.includes(ext)) {
+    showToast('Formato no permitido. Usá .pdf, .doc, .docx, .jpg o .png', 4000);
+    return;
+  }
+  if (file.size > MAX_BYTES) {
+    showToast('El archivo supera los 20 MB', 4000);
+    return;
+  }
 
-  renderTicket();
-  showToast('Agregado al ticket ✓');
+  const config = calculateCurrentConfig();
+  addBtn.disabled = true;
+  addBtn.textContent = 'Subiendo archivo…';
+  try {
+    const archivoPath = await uploadFile(file);
+    state.cart.push({
+      id: crypto.randomUUID(),
+      label: `${config.label} · ${file.name}`,
+      subtotal: config.subtotal,
+      config: { ...config.config, archivoPath },
+    });
+    // Each cart item carries its own file: clear the field so the next one is not mixed up.
+    fileInput.value = '';
+    state.file = null;
+    fileNameEl.textContent = '';
+    renderTicket();
+    showToast('Agregado al ticket ✓');
+  } catch (error) {
+    console.error('Error al subir el archivo:', error);
+    showToast(error.message || 'No se pudo subir el archivo. Probá de nuevo.', 4000);
+  } finally {
+    addBtn.disabled = false;
+    addBtn.textContent = 'Añadir al pedido';
+  }
 });
 
 // ---------- Toast ----------

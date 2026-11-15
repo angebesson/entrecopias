@@ -4,7 +4,8 @@ import { readFileSync } from 'node:fs';
 import { PRECIOS, calcularItem, armarPedido, PedidoInvalido } from '../api/_lib/precios.js';
 
 const cliente = { nombre: 'Ana', apellido: 'Perez', celular: '3454000000', email: 'ana@correo.com' };
-const impresion = { tipo: 'impresiones', tamano: 'a4', calidad: 'byn', faz: 'simple', papel: 'comun', terminado: 'ninguna', copias: 1 };
+const RUTA = 'pendientes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee/tp.pdf';
+const impresion = { archivoPath: RUTA, tipo: 'impresiones', tamano: 'a4', calidad: 'byn', faz: 'simple', papel: 'comun', terminado: 'ninguna', copias: 1 };
 
 test('los precios del servidor coinciden con los de index.html', () => {
   const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
@@ -27,7 +28,7 @@ test('impresion: la terminacion es monto fijo, no por copia', () => {
 });
 
 test('foto: 13x18 mate x4 = (220+20)*4', () => {
-  const r = calcularItem({ tipo: 'fotografia', tamanoFoto: '13x18', acabadoFoto: 'mate', copias: 4 });
+  const r = calcularItem({ tipo: 'fotografia', archivoPath: RUTA, tamanoFoto: '13x18', acabadoFoto: 'mate', copias: 4 });
   assert.equal(r.subtotal, 960);
 });
 
@@ -54,9 +55,16 @@ test('rechaza opciones inventadas, copias raras y claves del prototipo', () => {
 });
 
 test('armarPedido suma el total y valida el cliente', () => {
-  const p = armarPedido({ cliente, items: [impresion, { tipo: 'fotografia', tamanoFoto: '10x15', acabadoFoto: 'brillante', copias: 2 }] });
+  const p = armarPedido({ cliente, items: [impresion, { tipo: 'fotografia', archivoPath: RUTA, tamanoFoto: '10x15', acabadoFoto: 'brillante', copias: 2 }] });
   assert.equal(p.total, 30 + 300);
   assert.throws(() => armarPedido({ cliente: { ...cliente, email: 'nada' }, items: [impresion] }), PedidoInvalido);
   assert.throws(() => armarPedido({ cliente: { ...cliente, nombre: '' }, items: [impresion] }), PedidoInvalido);
   assert.throws(() => armarPedido({ cliente, items: [] }), PedidoInvalido);
+});
+
+test('exige un archivo con ruta valida (no acepta rutas inventadas ni escapes)', () => {
+  for (const mala of [undefined, '', '../secreto.pdf', 'pendientes/../../x.pdf', 'otra/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee/x.pdf', 'pendientes/no-es-uuid/x.pdf', RUTA + '/../x', 'pendientes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee/a b.pdf']) {
+    assert.throws(() => calcularItem({ ...impresion, archivoPath: mala }), PedidoInvalido);
+  }
+  assert.match(calcularItem(impresion).label, /tp.pdf/);
 });

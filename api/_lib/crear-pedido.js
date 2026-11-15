@@ -6,7 +6,7 @@ import { armarPedido, PedidoInvalido } from './precios.js';
  * y crea la preferencia de pago de Mercado Pago. Devuelve { url } para redirigir al checkout.
  * Las dependencias se inyectan para poder probarlo sin red.
  */
-export function crearPedidoHandler({ db, crearPreferencia, env }) {
+export function crearPedidoHandler({ db, crearPreferencia, archivoExiste, env }) {
   return async function handler(req, res) {
     if (req.method !== 'POST') {
       res.setHeader('Allow', 'POST');
@@ -19,6 +19,21 @@ export function crearPedidoHandler({ db, crearPreferencia, env }) {
     } catch (e) {
       if (e instanceof PedidoInvalido) return res.status(400).json({ error: e.message });
       throw e;
+    }
+
+    // Cada archivo tiene que estar realmente subido antes de cobrar.
+    const rutas = [...new Set(pedido.items.map((it) => it.config.archivoPath))];
+    for (const ruta of rutas) {
+      let existe = false;
+      try {
+        existe = await archivoExiste(ruta);
+      } catch (e) {
+        console.error('No se pudo verificar el archivo:', e.message);
+        return res.status(500).json({ error: 'No se pudo verificar el archivo. Probá de nuevo.' });
+      }
+      if (!existe) {
+        return res.status(400).json({ error: 'Un archivo no se subió completo. Volvé a subirlo.' });
+      }
     }
 
     const siteUrl = (env.SITE_URL ?? '').trim().replace(/\/$/, '');

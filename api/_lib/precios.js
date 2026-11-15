@@ -20,6 +20,10 @@ const NOMBRES = {
 
 export const MAX_COPIAS = 1000;
 
+// El archivo vive en el bucket privado "archivos", siempre bajo pendientes/<uuid>/<nombre-seguro>.
+// El servidor genera esa ruta (api/subir-archivo.js); el pedido solo acepta rutas con esta forma.
+export const ARCHIVO_RE = /^pendientes\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/[A-Za-z0-9._-]{1,80}$/;
+
 export class PedidoInvalido extends Error {}
 
 function opcion(grupo, valor) {
@@ -40,8 +44,10 @@ function copias(valor) {
 /** Recibe la configuracion de un item (solo opciones, sin precios) y devuelve { label, subtotal }. */
 export function calcularItem(item) {
   if (!item || typeof item !== 'object') throw new PedidoInvalido('Item invalido');
-  const archivo = typeof item.archivo === 'string' ? item.archivo.slice(0, 120) : '';
-  const sufijo = archivo ? ` · ${archivo}` : '';
+  if (typeof item.archivoPath !== 'string' || !ARCHIVO_RE.test(item.archivoPath)) {
+    throw new PedidoInvalido('Falta subir el archivo');
+  }
+  const sufijo = ` · ${item.archivoPath.split('/').pop()}`; // nombre ya saneado por el servidor
 
   if (item.tipo === 'impresiones') {
     const n = copias(item.copias);

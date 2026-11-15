@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { BUCKET } from './subir-archivo.js';
 
 let cliente;
 /** Cliente de Supabase con la service key (solo servidor). La tabla tiene RLS activado y sin politicas. */
@@ -12,4 +13,9 @@ export function db() {
     });
   }
   return cliente;
+}
+
+/** Bucket privado de archivos (solo accesible con la service key, desde el servidor). */
+export function storage() {
+  return db().storage.from(BUCKET);
 }

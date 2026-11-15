@@ -41,7 +41,8 @@ function res() {
   return r;
 }
 const cliente = { nombre: 'Ana', apellido: 'Perez', celular: '3454000000', email: 'ana@correo.com' };
-const item = { tipo: 'impresiones', tamano: 'a4', calidad: 'color', faz: 'simple', papel: 'comun', terminado: 'anillado', copias: 2 };
+const RUTA = 'pendientes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee/tp.pdf';
+const item = { archivoPath: RUTA, tipo: 'impresiones', tamano: 'a4', calidad: 'color', faz: 'simple', papel: 'comun', terminado: 'anillado', copias: 2 };
 
 // --- crear pedido ---
 test('crear-pedido: recalcula el total, guarda y devuelve la URL de pago', async () => {
@@ -50,6 +51,7 @@ test('crear-pedido: recalcula el total, guarda y devuelve la URL de pago', async
   const h = crearPedidoHandler({
     db: () => db,
     env,
+    archivoExiste: async () => true,
     crearPreferencia: async (p) => ((recibido = p), { init_point: 'https://mp.test/checkout' }),
   });
   // el cliente intenta colar un total falso
@@ -77,6 +79,7 @@ test('crear-pedido: si Mercado Pago falla, el pedido queda cancelado y responde 
   const h = crearPedidoHandler({
     db: () => db,
     env,
+    archivoExiste: async () => true,
     crearPreferencia: async () => {
       throw new Error('boom');
     },
@@ -170,4 +173,20 @@ test('webhook: si MP no responde -> 502 (para que reintente)', async () => {
   const r = res();
   await h(aviso(), r);
   assert.equal(r.code, 502);
+});
+
+test('crear-pedido: si el archivo no existe en el bucket, 400 y no se crea el pedido ni el pago', async () => {
+  const db = fakeDb();
+  let pagos = 0;
+  const h = crearPedidoHandler({
+    db: () => db,
+    env,
+    archivoExiste: async () => false,
+    crearPreferencia: async () => (pagos++, { init_point: 'x' }),
+  });
+  const r = res();
+  await h({ method: 'POST', body: { cliente, items: [item] } }, r);
+  assert.equal(r.code, 400);
+  assert.equal(pagos, 0);
+  assert.equal(db.filas.size, 0);
 });

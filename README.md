@@ -8,9 +8,17 @@ Pedido de impresiones con pago por Mercado Pago (Checkout Pro). Es un proyecto d
 3. Mercado Pago avisa a `api/webhook.js`. El servidor **verifica la firma**, le pregunta a Mercado Pago el estado real del pago, comprueba monto y moneda contra el pedido y recién ahí lo marca `pagado`.
 4. La URL de vuelta (`?pago=ok`) solo muestra un mensaje; no marca nada como pagado.
 
+## Subida de archivos
+1. La página le pide a `api/subir-archivo.js` una **URL firmada** (manda solo nombre, tipo y tamaño, no el archivo). El servidor valida formato (.pdf .doc .docx .jpg .png), tipo y tamaño (hasta 20 MB) y devuelve una ruta `pendientes/<uuid>/<nombre-seguro>`.
+2. El navegador sube el archivo **directo a Supabase Storage** (bucket privado `archivos`) con esa URL. No pasa por Vercel (límite de 4,5 MB) y la clave secreta no sale del servidor.
+3. Al crear el pedido, el servidor comprueba que la ruta tenga la forma exacta y que el archivo **exista** en el bucket antes de cobrar.
+Correr `supabase/storage.sql` una vez para crear el bucket (privado, 20 MB, solo esos tipos).
+Límite conocido: cualquiera puede pedir URLs de subida, así que hay topes de formato y tamaño, pero no limitación por cantidad; los archivos de pedidos no pagados quedan en `pendientes/` hasta limpiarlos.
+
 ## Pendiente (próximas etapas)
-- Subida real del archivo (hoy solo viaja el nombre) -> Supabase Storage.
-- Vista de pedidos para el local.
+- Vista de pedidos para el local (con descarga del archivo).
+- Migrar de la API de Preferences (se descontinúa) a Orders.
+- Limpiar archivos de pedidos no pagados.
 - Mail al cliente cuando el pedido esté listo (el texto de la página lo promete).
 
 ## Probar
